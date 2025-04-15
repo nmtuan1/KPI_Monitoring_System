@@ -1,0 +1,16 @@
+
+asttokens                    2.4.1
+attrs                        24.2.0
+bs4                          0.0.2
+debugpy                      1.8.5
+docx                         0.2.4
+jira                         3.8.0
+jiter                        0.6.0                 
+openpyxl                     3.1.5
+pandas                       2.2.3
+pip                          25.0.1
+requests                     2.32.3
+requests-oauthlib            2.0.0
+requests-toolbelt            1.0.0
+rsa                          4.9
+schedule                     1.2.2
