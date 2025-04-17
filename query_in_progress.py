@@ -16,6 +16,27 @@ JIRA_QUERY = 'assignee in ("user email1", "user email2") AND status = "In Progre
 EXCEL_FILE = "C:/Users/nmtuan1.menlo/Documents/Dataset_2025/MenloQA_InProgress_Auto_collect.xlsx"  # Thay thế bằng đường dẫn đến file Excel của bạn
 SHEET_NAME = "2025"  # Thay thế bằng tên sheet bạn muốn cập nhật
 
+def get_in_progress_time(issue):
+    """Tính thời gian (số ngày) mà ticket đã ở trạng thái 'In Progress' và trả về thời điểm bắt đầu."""
+    in_progress_time = None
+    in_progress_start_time = None
+    now = datetime.now()
+
+    for history in issue.changelog.histories:
+        for item in history.items:
+            if item.field == 'status' and item.toString == 'In Progress':
+                in_progress_start_time_dt = datetime.strptime(history.created[:19], '%Y-%m-%dT%H:%M:%S')
+                in_progress_start_time = in_progress_start_time_dt.date()  # Lấy chỉ phần ngày
+                break
+        if in_progress_start_time:
+            break  # Chỉ cần tìm lần chuyển trạng thái đầu tiên sang 'In Progress'
+
+    if in_progress_start_time_dt:
+        time_difference = now - in_progress_start_time_dt
+        in_progress_time = time_difference.days
+
+    return in_progress_time, in_progress_start_time
+
 def get_all_jira_data_paginated():
     """Truy xuất tất cả dữ liệu từ Jira bằng pagination."""
     jira_options = {'server': JIRA_URL}
@@ -47,7 +68,7 @@ def get_all_jira_data_paginated():
                 automated_tc_value = issue.fields.customfield_11219.value
             else:
                 automated_tc_value = issue.fields.customfield_11219
-        
+
         manual_executed_raw = None
         if hasattr(issue.fields, 'customfield_11202'):
             if hasattr(issue.fields.customfield_11202, 'value'):
@@ -64,17 +85,21 @@ def get_all_jira_data_paginated():
                     manual_executed_value = float(manual_executed_raw) # Cố gắng chuyển đổi sang số thực
                 except ValueError:
                     manual_executed_value = manual_executed_raw # Nếu không chuyển đổi được, giữ nguyên giá trị ban đầu
-        
+
         reporter_username = issue.fields.reporter.name if issue.fields.reporter else None
         assignee_username = issue.fields.assignee.name if issue.fields.assignee else None
-        
+
+        cycle_time, in_progress_day = get_in_progress_time(issue)
+
         data.append({
             "Issue Type": issue.fields.issuetype.name if issue.fields.issuetype else None,
             "Project key": issue.fields.project.key if issue.fields.project else None,
             "Issue key": issue.key,
             "Summary": issue.fields.summary,
             "Created": issue.fields.created,
+            "In Progress day": in_progress_day,  # Thêm trường "In Progress day"
             "Resolved": resolution_date,
+            "Cycle Time": cycle_time,  # Thêm trường "Cycle Time"
             "Status": issue.fields.status.name if issue.fields.status else None,
             "Resolution": issue.fields.resolution.name if issue.fields.resolution else None,
             "Reporter": issue.fields.reporter.displayName if issue.fields.reporter else None,
@@ -118,7 +143,7 @@ def job():
 
 # Gọi hàm job() trực tiếp để chạy test ngay lập tức, hoặc chạy trong Task Schedule của windows
 #if __name__ == "__main__":
-#    job()
+#     job()
 
 # Lên lịch công việc chạy mỗi ngày một lần vào lúc 8 giờ sáng
 schedule.every().day.at("11:50").do(job)
