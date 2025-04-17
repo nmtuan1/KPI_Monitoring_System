@@ -2,9 +2,11 @@ import pandas as pd
 from datetime import datetime
 import numpy as np
 
-df_resolved = pd.read_excel('C:/.../../..your direcotry/ABCD_Resolved_Auto_collect.xlsx')
-df_bugfound = pd.read_excel('C:/.../../..your direcotry/ABCD_Bug_found_Auto_collect.xlsx')
-df_PR_TMA = pd.read_excel('C:/.../../..your direcotry/ABCD_PR_Auto_collect.xlsx')
+df_resolved = pd.read_excel('/..../your Directory/../Data_Resolved_Auto_collect.xlsx')
+df_in_progress = pd.read_excel('/..../your Directory/../Data_InProgress_Auto_collect.xlsx')
+df_bugfound = pd.read_excel('/..../your Directory/../Data_Bug_found_Auto_collect.xlsx')
+df_PR_TMA = pd.read_excel('/..../your Directory/../Data_PR_Auto_collect.xlsx')
+#df_access = pd.read_excel('C:/Users/nmtuan1.menlo/Documents/Dataset_2025/Access_Gate_2024.xlsx')
 
 
 ############ TICKET RESOLVED ######################
@@ -106,12 +108,6 @@ df_resolved_filter=df_resolved[(df_resolved['Resolution']=='Done') | (df_resolve
     total_Automated = ('Automated TC','sum'),
     total_Manual = ('Manual Executed','sum')
 ).reset_index().sort_values(by=['Team','total_Storypoint'], ascending =[True, False])
-
-# DF Resolved with issue type
-# Group Issue Type
-df_resolved_IssueType=df_resolved[(df_resolved['Resolution']=='Done') | (df_resolved['Resolution']=='Fixed')].groupby(['Issue Type','User','Team','Week']).agg(
-    total_Ticket =('Issue key','count'),
-).reset_index().sort_values(by='Week', ascending=False)
 
 
 ############ Bug Found analysis 2025 ######################
@@ -294,6 +290,104 @@ df_join_Resolved_Bug_PR=df_join_Resolved_Bug_PR.fillna(0)
 
 # Create DF alarm for PR cycletime > 5
 df_PR_TMA_ALARM = df_PR_TMA[(df_PR_TMA['State'] == 'OPEN') & (df_PR_TMA['Cycle Time'] > 5)]
+
+
+############ ############ ############ ############ ############ ############ ############ ############ ############ ############ ############  ######################
+
+
+############ TICKET IN_PROGRESS ######################
+
+## Tickets IN-PROGRESS analysis
+
+#Convert Created & Resolved date to datetime datatype
+df_in_progress['Created']=pd.to_datetime(df_in_progress['Created'])
+df_in_progress['Resolved']=pd.to_datetime(df_in_progress['Resolved'])
+
+
+#Convert Story point to int
+df_in_progress['Story Points']=df_in_progress['Story Points'].fillna(0)
+df_in_progress['Story Points']=df_in_progress['Story Points'].astype(int)
+#Convert Story point 'QE Automated TCs' to int
+df_in_progress['Automated TC']=df_in_progress['Automated TC'].fillna(0)
+df_in_progress['Automated TC']=df_in_progress['Automated TC'].astype(int)
+#Convert Story point 'Custom field (Need)' to int
+df_in_progress['Manual Executed']=df_in_progress['Manual Executed'].fillna(0)
+df_in_progress['Manual Executed']=df_in_progress['Manual Executed'].astype(int)
+
+
+#Add Column User
+df_in_progress['User']=df_in_progress['Assignee']
+
+
+#Define TEAM
+df_in_progress['Team']='None'
+df_in_progress.loc[
+    (df_in_progress['Assignee_user']=='tuan.nguyen1@abc.com')|(df_in_progress['Assignee']=='Huynh Hoang'), 'Team'
+    ]='CIM'
+df_in_progress.loc[
+    (df_in_progress['Assignee']=='Dang Chau')|(df_in_progress['Assignee']=='Nhi Tran')|
+    (df_in_progress['Assignee']=='Minh Trinh Thi'), 'Team'
+    ]='Performance'  
+df_in_progress.loc[(df_in_progress['Assignee']=='Khoa Phan')|(df_in_progress['Assignee']=='Y Truong'), 'Team']='SDET'
+df_in_progress.loc[
+    (df_in_progress['Assignee']=='Cong Tran')|(df_in_progress['Assignee']=='Thien Bui')|
+    (df_in_progress['Assignee']=='Giau Vo Ngoc')|(df_in_progress['Assignee']=='Nga Ung'), 'Team'
+    ]='Automation'
+df_in_progress.loc[
+    (df_in_progress['Assignee']=='Tuan Le')|(df_in_progress['Assignee_user']=='hieu.doung@abc.com')|
+    (df_in_progress['Assignee_user']=='thien.le@abc.com'), 'Team'
+    ]='OVA'
+df_in_progress.loc[
+    (df_in_progress['Assignee']=='Trang Nguyen')|(df_in_progress['Assignee']=='Vinh Le')|
+    (df_in_progress['Assignee']=='Toan Nguyen')|(df_in_progress['Assignee']=='Phuong Nguyen')|
+    (df_in_progress['Assignee']=='Liem Nguyen')|(df_in_progress['Assignee']=='Ngan Hua')|
+    (df_in_progress['Assignee_user']=='trinh.nguyen@abc.com')|(df_in_progress['Assignee_user']=='yen.le@abc.com'), 'Team'
+    ]='Regression'
+df_in_progress.loc[
+    (df_in_progress['Assignee_user']=='hau.do@abc.com')|(df_in_progress['Assignee_user']=='chuong.nguyen@abc.com')|
+    (df_in_progress['Assignee_user']=='trinh.nguyen2@abc.com')|(df_in_progress['Assignee_user']=='ai.ngo@abc.com')|
+    (df_in_progress['Assignee_user']=='bao.mang@abc.com')|(df_in_progress['Assignee_user']=='duc.nguyen@abc.com')|
+    (df_in_progress['Assignee_user']=='thao.dang@abc.com')|(df_in_progress['Assignee_user']=='tram.le@abc.com')|
+    (df_in_progress['Assignee_user']=='trang.vo@abc.com')|(df_in_progress['Assignee_user']=='tu.le@abc.com')|
+    (df_in_progress['Assignee_user']=='tram.nguyen@abc.com')|(df_in_progress['Assignee_user']=='dat.pham@abc.com')|
+    (df_in_progress['Assignee_user']=='hung.nguyen@abc.com')|(df_in_progress['Assignee_user']=='duc.pham@abc.com')|
+    (df_in_progress['Assignee_user']=='hau.van@abc.com'), 'Team'
+    ]='Feature'
+
+# Add column Time series
+df_in_progress['Year']=df_in_progress['In Progress day'].dt.year
+df_in_progress['Month']=df_in_progress['In Progress day'].dt.month
+df_in_progress['Week'] = df_in_progress['In Progress day'].dt.isocalendar().week
+
+# Create DF Resolved filter
+df_in_progress_filter=df_in_progress[(df_in_progress['Issue Type']!='Epic') & (df_in_progress['Year']==2025)].groupby(['Team','User','Week', 'Month']).agg(
+    total_InProgress = ('Issue key','count')
+).reset_index().sort_values(by=['Team','total_InProgress'], ascending =[True, False])
+
+# Group In-Progress Type
+df_in_progress_IssueType=df_in_progress.groupby(['User','Team','Issue Type']).agg(
+    total_In_Progress =('Issue key','count'),
+).reset_index().sort_values(by='User', ascending=False)
+
+# Create DF Resolved filter = EPIC
+df_in_progress_EPIC=df_in_progress[(df_in_progress['Issue Type']=='Epic')].groupby(['User','Team','Issue key','Cycle Time', 'Issue Type']).agg(
+    total_Ticket =('Issue key','count'),
+).reset_index().sort_values(by='Cycle Time', ascending=False)
+
+# Create DF Resolved filter #EPIC
+df_in_progress_NonEPIC=df_in_progress[(df_in_progress['Issue Type']!='Epic')].groupby(['User','Team','Issue key','Cycle Time', 'Issue Type']).agg(
+    total_Ticket =('Issue key','count'),
+).reset_index().sort_values(by='Cycle Time', ascending=False)
+
+
+# Merge DF Ticket Resolved filter and Bug found Filter
+df_join_Resolved_Bug_PR_InProgress=pd.merge(df_join_Resolved_Bug_PR, df_in_progress_filter, how='outer', on=['Team','User','Week', 'Month'])
+df_join_Resolved_Bug_PR_InProgress=df_join_Resolved_Bug_PR_InProgress.fillna(0)
+
+
+############ ############ ############ ############ ############ ############ ############ ############ ############ ############ ############  ######################
+
+
 
 
 ############ Check in gate 2024 ######################
